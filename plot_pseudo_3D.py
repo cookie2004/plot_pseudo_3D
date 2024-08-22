@@ -226,10 +226,16 @@ def make_animation(xyz,
   # initialize figure
   fig = plt.figure()
   gs = GridSpec(4,3, figure=fig)
-  if pairwise is not None:
-    ax1, ax2, ax3 = fig.add_subplot(gs[:3,:2]), fig.add_subplot(gs[3:,:]), fig.add_subplot(gs[:3,2:])
+  if pairwise is None:
+    if seq is None:
+      ax1 = fig.add_subplot(gs[:,:])
+    else:
+      ax1, ax2 = fig.add_subplot(gs[:3,:]), fig.add_subplot(gs[3:,:])
   else:
-    ax1, ax2 = fig.add_subplot(gs[:3,:]), fig.add_subplot(gs[3:,:])
+    if seq is None:
+      ax1, ax3 = fig.add_subplot(gs[:,:2]), fig.add_subplot(gs[:,2:])
+    else:
+      ax1, ax2, ax3 = fig.add_subplot(gs[:3,:2]), fig.add_subplot(gs[3:,:]), fig.add_subplot(gs[:3,2:])
 
   fig.subplots_adjust(top=0.95,bottom=0.1,right=0.95,left=0.05,hspace=0,wspace=0)
   fig.set_figwidth(8); fig.set_figheight(6); fig.set_dpi(dpi)
