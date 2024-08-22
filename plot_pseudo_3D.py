@@ -25,13 +25,29 @@ jalview_color_list = {"Clustal":           ["#80a0f0","#f01505","#00ff00","#c048
 
 pymol_cmap = matplotlib.colors.ListedColormap(pymol_color_list)
 
-def kabsch(a, b, return_v=False):
-  '''get alignment matrix for two sets of coodinates'''
-  ab = a.swapaxes(-1,-2) @ b
+def kabsch(a, b, weights=None, return_v=False):
+  '''Get alignment matrix for two sets of coordinates, with optional weights.'''
+  
+  if weights is not None:
+    # Apply weights to the coordinates
+    weights = np.sqrt(weights)[:, np.newaxis]
+    a_weighted = a * weights
+    b_weighted = b * weights
+  else:
+    a_weighted = a
+    b_weighted = b
+  
+  # Compute the weighted covariance matrix
+  ab = a_weighted.swapaxes(-1, -2) @ b_weighted
+  
+  # Perform Singular Value Decomposition
   u, s, vh = np.linalg.svd(ab, full_matrices=False)
+  
+  # Handle reflection case
   flip = np.linalg.det(u @ vh) < 0
   u_ = np.where(flip, -u[...,-1].T, u[...,-1].T).T
   u[...,-1] = u_
+  
   return u if return_v else (u @ vh)
 
 def nankabsch(a,b,**kwargs):
@@ -317,4 +333,4 @@ def make_animation(xyz,
   # make animation!
   ani = animation.ArtistAnimation(fig, ims, blit=True, interval=interval)
   plt.close()
-  return ani.to_html5_video()
+  return ani
