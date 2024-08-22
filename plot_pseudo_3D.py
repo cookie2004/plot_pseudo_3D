@@ -175,10 +175,6 @@ def make_animation(xyz,
                    dpi=100, interval=60, color_msa="Taylor",
                    length=None, align_xyz=True, **kwargs):
                      
-  if len(seq) == 0: seq = None
-  if len(pairwise) == 0: pairwise = None
-  if len(sitewise) == 0: sitewise = None
-
   if pos_ref is None:
     pos_ref = xyz[-1]
 
