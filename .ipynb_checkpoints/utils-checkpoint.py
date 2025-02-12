@@ -1,5 +1,13 @@
 import numpy as np
 
+def rescale(a, amin=None, amax=None):
+    a = np.copy(a)
+    if amin is None: amin = a.min()
+    if amax is None: amax = a.max()
+    a[a < amin] = amin
+    a[a > amax] = amax
+    return (a - amin)/(amax - amin)
+      
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 

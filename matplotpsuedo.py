@@ -6,7 +6,7 @@ import matplotlib.patheffects
 from matplotlib import animation
 from matplotlib.gridspec import GridSpec 
 from matplotlib import collections as mcoll
-#from scipy.special import expit as sigmoid
+
 from utils import *
 from colormaps import *
 
@@ -36,23 +36,46 @@ def kabsch(a, b, weights=None, return_v=False):
   return u if return_v else (u @ vh)
 
 def nankabsch(a,b,**kwargs):
-  ok = np.isfinite(a).all(axis=1) & np.isfinite(b).all(axis=1)
-  a,b = a[ok],b[ok]
-  return kabsch(a,b,**kwargs)
+    """
+    Get alignment matrix for two sets of coordinates, excluding rows with NaN or infinite values.
+    
+    Parameters:
+    a (ndarray): First set of coordinates.
+    b (ndarray): Second set of coordinates.
+    **kwargs: Additional keyword arguments passed to the kabsch function.
+    
+    Returns:
+    ndarray: Alignment matrix.
+    """
+    # Check for finite values in both sets of coordinates
+    ok = np.isfinite(a).all(axis=1) & np.isfinite(b).all(axis=1)
+    # Filter out rows with NaN or infinite values
+    a,b = a[ok],b[ok]
+    # Call the kabsch function with the filtered coordinates and additional arguments
+    return kabsch(a,b,**kwargs)
 
 def plot_pseudo_3D(xyz, c=None, ax=None, chainbreak=5, Ls=None,
                    cmap="gist_rainbow", line_w=2.0,
                    cmin=None, cmax=None, zmin=None, zmax=None,
-                   shadow=0.95):
+                   shadow=0.95,remove_axes=False):
+  """
+  Plots a pseudo-3D representation of a protein structure in 2D, with optional color mapping.
 
-  def rescale(a, amin=None, amax=None):
-    a = np.copy(a)
-    if amin is None: amin = a.min()
-    if amax is None: amax = a.max()
-    a[a < amin] = amin
-    a[a > amax] = amax
-    return (a - amin)/(amax - amin)
+  Parameters:
+  xyz (array-like): Coordinates of the protein structure.
+  c (array-like, optional): Colors for each segment.
+  ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on.
+  chainbreak (float, optional): Distance to consider a break in the chain.
+  Ls (list of int, optional): Lengths of chains.
+  cmap (str or Colormap, optional): Colormap to use for coloring segments.
+  line_w (float, optional): Line width.
+  cmin, cmax (float, optional): Min and max values for color scaling.
+  zmin, zmax (float, optional): Min and max values for z-dimension scaling.
+  shadow (float, optional): Shadow intensity.
 
+  Returns:
+  matplotlib.collections.LineCollection: Line collection added to the plot.
+  """
   # make segments and colors for each segment
   xyz = np.asarray(xyz)
   if Ls is None:
@@ -139,7 +162,9 @@ def plot_pseudo_3D(xyz, c=None, ax=None, chainbreak=5, Ls=None,
 
   lines = mcoll.LineCollection(seg_xy[order], colors=colors[order], linewidths=linewidths,
                                path_effects=[matplotlib.patheffects.Stroke(capstyle="round")])
-  
+
+  if remove_axes:
+      ax.axis('off')
   return ax.add_collection(lines)
 
 def plot_ticks(ax, Ls, Ln=None, add_yticks=False):
@@ -175,7 +200,34 @@ def make_animation(xyz,
                    line_w=2.0,
                    dpi=100, interval=60, color_msa="Taylor",
                    length=None, align_xyz=True, **kwargs):
-                     
+  """
+  Creates an animation of protein folding trajectories.
+
+  Parameters:
+  xyz (list of np.ndarray): List of 3D coordinates for each frame.
+  seq (list of np.ndarray): Sequence data for each frame.
+  sitewise (list of np.ndarray): Sitewise data (e.g., confidence scores) for each frame.
+  pairwise (list of np.ndarray): Pairwise data (e.g., distance matrices) for each frame.
+  sitewise_label (str): Label for the sitewise data.
+  sitewise_min (float): Minimum value for sitewise data color scaling.
+  sitewise_max (float): Maximum value for sitewise data color scaling.
+  sitewise_color (str): Color scheme for sitewise data.
+  pairwise_label (str): Label for the pairwise data.
+  pairwise_min (float): Minimum value for pairwise data color scaling.
+  pairwise_max (float): Maximum value for pairwise data color scaling.
+  losses (list of float): Loss values for each frame.
+  pos_ref (np.ndarray): Reference position for alignment.
+  line_w (float): Line width for plotting.
+  dpi (int): Dots per inch for the figure.
+  interval (int): Interval between frames in milliseconds.
+  color_msa (str): Color scheme for multiple sequence alignment.
+  length (int or list): Length of the protein or list of lengths for each chain.
+  align_xyz (bool): Whether to align the coordinates to a reference.
+  kwargs: Additional keyword arguments.
+
+  Returns:
+  matplotlib.animation.ArtistAnimation: The generated animation.
+  """                     
   if pos_ref is None:
     pos_ref = xyz[-1]
 
