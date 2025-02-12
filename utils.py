@@ -39,3 +39,39 @@ def pdb_to_xyz(pdb_file, atom_types=['CA']):
                 xyz_coordinates.append((x, y, z))
     return xyz_coordinates
 
+def pdb_traj_to_xyz(pdb_file, atom_types=['CA']):
+    """
+    Reads a PDB file and extracts atom coordinates into an XYZ coordinate list for the specified atom types.
+    Handles multiple models (trajectory frames) in the PDB file.
+    
+    Parameters:
+    pdb_file (str): Path to the input PDB file.
+    atom_types (list of str): List of atom types to filter by (e.g., ['C', 'O'] for carbon and oxygen).
+    
+    Returns:
+    list of lists: List of lists where each inner list contains tuples representing XYZ coordinates of the specified atom types for each model.
+    """
+    assert type(atom_types) == list, 'atom_types must be a list of atoms!'
+    
+    atom_types = [at.strip() for at in atom_types]
+    xyz_coordinates_all_models = []
+    xyz_coordinates = []
+    in_model = False
+    
+    with open(pdb_file, 'r') as file:
+        for line in file:
+            if line.startswith("MODEL"):
+                in_model = True
+                xyz_coordinates = []
+            elif line.startswith("ENDMDL"):
+                in_model = False
+                xyz_coordinates_all_models.append(xyz_coordinates)
+            elif in_model and (line.startswith("ATOM") or line.startswith("HETATM")):
+                atom_type = line[12:16].strip()
+                if atom_type in atom_types:
+                    x = float(line[30:38].strip())
+                    y = float(line[38:46].strip())
+                    z = float(line[46:54].strip())
+                    xyz_coordinates.append((x, y, z))
+    
+    return xyz_coordinates_all_models
