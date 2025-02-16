@@ -1,5 +1,5 @@
 from utils import *
-from matplotpsuedo import *
+from pseudoplotlib import *
 
 # Assuming plot_pseudo_3D is already defined in plot_pseudo_3D.py
 import matplotlib.pyplot as plt
